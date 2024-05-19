@@ -56,34 +56,34 @@ class AuthController extends Controller
          $request->validate([
              'email' => 'required|email',
          ]);
- 
+
          $user = User::where('email', $request->email)->first();
- 
+
          if (!$user) {
              return response()->json(['message' => 'User not found'], 404);
          }
- 
+
          // Generate a random temporary password
          $tempPassword = Str::random(10);
- 
+
          // Update user's password with the temporary password
          $user->password = Hash::make($tempPassword);
          $user->save();
- 
+
          // Send the temporary password to the user's email
          $this->sendTempPasswordByEmail($user->email, $tempPassword);
- 
+
          return response()->json(['message' => 'Temporary password sent to your email'], 200);
      }
- 
+
      private function sendTempPasswordByEmail($email, $tempPassword)
      {
          // Send email logic here (use your preferred email sending method or service)
          // Example using Laravel Mail:
          Mail::raw("Your temporary password is: $tempPassword", function ($message) use ($email) {
-            $message->from('your@example.com', 'Your Name');
-            $message->to("ijacksonniii@gmail.com")->subject('Temporary Password');
+            $message->from('your@example.com', 'Admin Danish Ice Cream Cafe');
+            $message->to($email)->subject('Temporary Password');
         });
-        
+
      }
 }

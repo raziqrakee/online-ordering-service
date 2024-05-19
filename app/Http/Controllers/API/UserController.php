@@ -87,6 +87,7 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required|email',
             'contact_number' => 'required',
+            'password' => 'nullable|min:8', // Add validation rule for password
             'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             // Add validation rules for other fields as needed
         ]);
@@ -104,6 +105,11 @@ class UserController extends Controller
         $user->email = $request->input('email');
         $user->contact_number = $request->input('contact_number');
         // Update other user attributes as needed
+
+        // Handle password update if provided
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->input('password'));
+        }
 
         // Handle image upload if provided
         if ($request->hasFile('image')) {
