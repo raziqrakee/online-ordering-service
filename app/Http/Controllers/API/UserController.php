@@ -59,7 +59,7 @@ class UserController extends Controller
 
         return response()->json(['message' => 'User created successfully'], 201);
     }
-
+ 
     /**
      * Display the specified resource.
      *
@@ -138,5 +138,19 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json(['message' => 'User deleted successfully'], 200);
+    }
+
+    public function removeImage($id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->image) {
+            $user->image = null;
+            $user->save();
+
+            return response()->json(['message' => 'User image removed successfully'], 200);
+        }
+
+        return response()->json(['message' => 'User has no image to remove'], 404);
     }
 }
