@@ -25,7 +25,6 @@ Route::post('reset-password', [AuthController::class, 'resetPassword']);
 Route::put('user/{id}', [UserController::class, 'update']);
 Route::delete('user/{id}/remove-image', [UserController::class, 'removeImage']);
 
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class);
 });

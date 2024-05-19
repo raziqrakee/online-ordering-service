@@ -59,7 +59,7 @@ class UserController extends Controller
 
         return response()->json(['message' => 'User created successfully'], 201);
     }
-
+ 
     /**
      * Display the specified resource.
      *
