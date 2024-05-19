@@ -23,6 +23,7 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('reset-password', [AuthController::class, 'resetPassword']);
 Route::put('user/{id}', [UserController::class, 'update']);
+Route::delete('user/{id}/remove-image', [UserController::class, 'removeImage']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
