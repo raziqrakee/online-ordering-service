@@ -29,4 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class);
 });
 
-Route::get('products', [ProductController::class, 'index']);
+Route::get('products', [ProductController::class, 'p_index']);
+Route::post('products', [ProductController::class, 'p_store']);
+Route::get('products/{id}', [ProductController::class, 'p_show']);
+Route::get('products/{id}/edit', [ProductController::class, 'p_edit']);
+Route::put('products/{id}/edit', [ProductController::class, 'p_update']);
+Route::delete('products/{id}/delete', [ProductController::class, 'p_destroy']);
