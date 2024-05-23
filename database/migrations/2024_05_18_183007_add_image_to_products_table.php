@@ -19,7 +19,7 @@ class AddImageToProductsTable extends Migration
             }
         });
     }
-
+ 
     /**
      * Reverse the migrations.
      *
