@@ -35,3 +35,4 @@ Route::get('products/{id}', [ProductController::class, 'p_show']);
 Route::get('products/{id}/edit', [ProductController::class, 'p_edit']);
 Route::put('products/{id}/edit', [ProductController::class, 'p_update']);
 Route::delete('products/{id}/delete', [ProductController::class, 'p_destroy']);
+Route::post('products/{id}/purchase', [ProductController::class, 'p_purchase']);
