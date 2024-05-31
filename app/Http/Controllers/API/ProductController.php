@@ -29,6 +29,7 @@ class ProductController extends Controller
                     'description' => $product->description,
                     'price' => $product->price,
                     'quantity' => $product->quantity,
+                    'sold' => $product->sold,
                     'category' => $product->category,
                     'created_at' => $product->created_at,
                     'updated_at' => $product->updated_at,
@@ -79,6 +80,7 @@ class ProductController extends Controller
             'description' => $request->description,
             'price' => $request->price,
             'quantity' => $request->quantity,
+            'sold' => 0, // Initialize sold to 0
             'category' => $request->category,
             'image' => $imagePath,
         ]);
@@ -341,27 +343,35 @@ class ProductController extends Controller
 
         $product = Product::find($id);
 
-        if ($product) {
-            if ($product->quantity >= $request->quantity) {
-                $product->quantity -= $request->quantity;
-                $product->save();
-
-                return response()->json([
-                    'status' => 200,
-                    'message' => 'Purchase successful, quantity deducted',
-                    'product' => $product
-                ], 200);
-            } else {
-                return response()->json([
-                    'status' => 400,
-                    'message' => 'Insufficient product quantity'
-                ], 400);
-            }
-        } else {
+        if (!$product) {
             return response()->json([
                 'status' => 404,
                 'message' => 'Product not found'
             ], 404);
+        }
+
+        if ($product->quantity < $request->quantity) {
+            return response()->json([
+                'status' => 400,
+                'message' => 'Insufficient product quantity'
+            ], 400);
+        }
+
+        try {
+            $product->decrement('quantity', $request->quantity);
+            $product->increment('sold', $request->quantity);
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Purchase successful, quantity deducted',
+                'product' => $product
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error in p_purchase: ' . $e->getMessage());
+            return response()->json([
+                'status' => 500,
+                'message' => 'An error occurred while processing the purchase.'
+            ], 500);
         }
     }
 }
