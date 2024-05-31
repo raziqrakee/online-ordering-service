@@ -31,8 +31,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('products', [ProductController::class, 'p_index']);
 Route::post('products', [ProductController::class, 'p_store']);
+Route::post('product', [ProductController::class, 'p_insert']);
 Route::get('products/{id}', [ProductController::class, 'p_show']);
 Route::get('products/{id}/edit', [ProductController::class, 'p_edit']);
-Route::put('products/{id}/edit', [ProductController::class, 'p_update']);
+Route::post('product/{id}', [ProductController::class, 'product_update']);
+// Route::put('products/{id}/edit', [ProductController::class, 'p_update']);
 Route::delete('products/{id}/delete', [ProductController::class, 'p_destroy']);
 Route::post('products/{id}/purchase', [ProductController::class, 'p_purchase']);
