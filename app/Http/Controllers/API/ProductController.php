@@ -53,7 +53,7 @@ class ProductController extends Controller
         // Validate the request data
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:191',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
             'quantity' => 'required|integer',
             'category' => 'required|string',
@@ -104,7 +104,7 @@ class ProductController extends Controller
         // Validate the request data
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:191',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
             'quantity' => 'required|integer',
             'category' => 'required|string',
@@ -154,7 +154,7 @@ class ProductController extends Controller
         // Validate the request data
         $validator = Validator::make($data, [
             'name' => 'required|string|max:191',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
             'quantity' => 'required|integer',
             'category' => 'required|string',
@@ -267,7 +267,7 @@ class ProductController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:191',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
             'quantity' => 'required|integer',
             'category' => 'required|string',
