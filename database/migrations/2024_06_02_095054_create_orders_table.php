@@ -12,9 +12,12 @@ class CreateOrdersTable extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+            $table->foreignId('order_type_id')->constrained('order_types')->onDelete('cascade');
+            $table->foreignId('payment_method_id')->constrained('payment_methods')->onDelete('cascade');
             $table->integer('quantity');
             $table->decimal('total_price', 10, 2);
             $table->string('status')->default('pending');
+            $table->string('receipt_file')->nullable();
             $table->timestamps();
         });
     }
@@ -24,3 +27,4 @@ class CreateOrdersTable extends Migration
         Schema::dropIfExists('orders');
     }
 }
+
