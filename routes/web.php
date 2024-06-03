@@ -16,3 +16,26 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// routes/web.php
+use Illuminate\Support\Facades\Mail;
+
+Route::get('/test-email', function () {
+    $data = [
+        'name' => 'Test Name',
+        'email' => 'test@example.com',
+        'message' => 'This is a test message.',
+    ];
+
+    try {
+        Mail::send('emails.catering_service', ['data' => $data], function ($message) {
+            $message->to('raziq.ziq12@gmail.com')
+                    ->subject('Test Email');
+        });
+
+        return 'Email sent successfully!';
+    } catch (\Exception $e) {
+        return 'Error sending email: ' . $e->getMessage();
+    }
+});
+

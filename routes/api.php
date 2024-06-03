@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\API\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,9 +14,10 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\OrderController;
+use App\Http\Controllers\API\ProductController;
+use App\Http\Controllers\CateringServiceController;
 
 
 // User
@@ -47,4 +48,7 @@ Route::post('orders', [OrderController::class, 'store']);
 Route::get('orders/{id}', [OrderController::class, 'show']);
 Route::put('orders/{id}', [OrderController::class, 'update']);
 Route::delete('orders/{id}', [OrderController::class, 'destroy']);
+
+// Route::middleware('auth:sanctum')->post('/catering-service', [CateringServiceController::class, 'submitForm']);
+Route::post('/catering-service', [CateringServiceController::class, 'submitForm']);
 
