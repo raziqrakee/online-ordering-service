@@ -18,6 +18,7 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\CateringServiceController;
+use App\Http\Controllers\API\ReservationController;
 
 
 // User
@@ -52,3 +53,7 @@ Route::delete('orders/{id}', [OrderController::class, 'destroy']);
 // Route::middleware('auth:sanctum')->post('/catering-service', [CateringServiceController::class, 'submitForm']);
 Route::post('/catering-service', [CateringServiceController::class, 'submitForm']);
 
+
+// Reservation
+Route::apiResource('reservations', ReservationController::class);
+Route::get('available-slots/{date}', [ReservationController::class, 'availableSlots']);
