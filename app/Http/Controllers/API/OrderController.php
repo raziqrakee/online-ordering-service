@@ -2,68 +2,74 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\Order;
-use App\Models\Product;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product; // Import the Product model
 use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
-    public function index()
-    {
-        $orders = Order::with(['user', 'product'])->get();
-        return response()->json($orders, 200);
-    }
-
-    public function store(Request $request)
+    public function placeOrder(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
+            'items' => 'required|array',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'payment_method' => 'required',
+            'order_type' => 'required',
+            'total_amount' => 'required|numeric',
+            'special_instructions' => 'nullable|string',
+            'receipt' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf|max:2048'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $product = Product::find($request->product_id);
+        $order = new Order();
+        $order->user_id = $request->user_id;
+        $order->total_amount = $request->total_amount;
+        $order->order_status = 'pending';
+        $order->customer_order_status = 'received';
+        $order->payment_method = $request->payment_method;
+        $order->order_type = $request->order_type;
+        $order->special_instructions = $request->special_instructions;
 
-        if ($product->quantity < $request->quantity) {
-            return response()->json([
-                'status' => 400,
-                'message' => 'Insufficient product quantity'
-            ], 400);
+        if ($request->hasFile('receipt')) {
+            $receipt = $request->file('receipt');
+            $receiptName = time() . '.' . $receipt->getClientOriginalExtension();
+            $receipt->move(public_path('receipts'), $receiptName);
+            $order->receipt_path = 'receipts/' . $receiptName;
         }
 
-        $totalPrice = $product->price * $request->quantity;
+        $order->save();
 
-        $order = Order::create([
-            'user_id' => $request->user_id,
-            'product_id' => $request->product_id,
-            'quantity' => $request->quantity,
-            'total_price' => $totalPrice,
-            'status' => 'pending',
-        ]);
+        foreach ($request->items as $item) {
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'price' => $item['price']
+            ]);
 
-        // Update product quantity and sold count
-        $product->decrement('quantity', $request->quantity);
-        $product->increment('sold', $request->quantity);
+            // Update the sold quantity for the product
+            $product = Product::find($item['product_id']);
+            if ($product) {
+                $product->increment('sold', $item['quantity']);
+                $product->decrement('quantity', $item['quantity']);
+            }
+        }
 
-        return response()->json(['message' => 'Order placed successfully', 'order' => $order], 201);
+        return response()->json(['id' => $order->id, 'message' => 'Order placed successfully'], 201);
     }
 
-    public function show($id)
-    {
-        $order = Order::with(['user', 'product'])->findOrFail($id);
-        return response()->json($order, 200);
-    }
-
-    public function update(Request $request, $id)
+    public function updateOrderStatus(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'required|string',
+            'order_status' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -71,16 +77,44 @@ class OrderController extends Controller
         }
 
         $order = Order::findOrFail($id);
-        $order->update(['status' => $request->status]);
 
-        return response()->json(['message' => 'Order updated successfully', 'order' => $order], 200);
+        $statusMap = [
+            'pending' => 'received',
+            'in-process' => 'preparing',
+            'completed' => 'ready',
+            'cancelled' => 'Please Order Again'
+        ];
+
+        $order->order_status = $request->order_status;
+        $order->customer_order_status = $statusMap[$request->order_status] ?? $order->customer_order_status;
+        $order->save();
+
+        return response()->json(['order_status' => $order->order_status, 'customer_order_status' => $order->customer_order_status, 'message' => 'Order status updated successfully'], 200);
     }
 
-    public function destroy($id)
+    public function viewOrder($id)
     {
-        $order = Order::findOrFail($id);
-        $order->delete();
-
-        return response()->json(['message' => 'Order deleted successfully'], 200);
+        $order = Order::with('items.product', 'user')->findOrFail($id);
+        return response()->json($order);
     }
+
+    public function listOrders()
+    {
+        $orders = Order::with('user', 'items.product')->get();
+        return response()->json($orders);
+    }
+
+    public function viewOrderDetails($id)
+    {
+        $order = Order::with('user', 'items.product')->findOrFail($id);
+        return response()->json($order);
+    }
+
+    public function getLatestOrderId()
+    {
+        $latestOrder = Order::orderBy('id', 'desc')->first();
+        $latestOrderId = $latestOrder ? $latestOrder->id : 0;
+        return response()->json(['latestOrderId' => $latestOrderId], 200);
+    }
+
 }

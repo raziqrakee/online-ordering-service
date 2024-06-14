@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Product;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -48,6 +49,20 @@ class ProductController extends Controller
             ], 404);
         }
     }
+
+    public function updateSoldAndQuantity()
+    {
+        $products = Product::all();
+        foreach ($products as $product) {
+            $soldQuantity = OrderItem::where('product_id', $product->id)->sum('quantity');
+            $product->sold = $soldQuantity;
+            $product->quantity = max(0, $product->quantity - $soldQuantity);
+            $product->save();
+        }
+
+        return response()->json(['message' => 'Product quantities and sold updated successfully'], 200);
+    }
+
     public function p_store(Request $request)
     {
         // Validate the request data
