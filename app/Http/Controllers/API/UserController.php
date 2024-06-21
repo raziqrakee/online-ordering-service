@@ -69,7 +69,7 @@ class UserController extends Controller
     public function show($id)
     {
         $user = User::findOrFail($id);
-          $user->image_url = asset('' . $user->image);
+        $user->image_url = $user->image ? asset($user->image) : null;
         return response()->json($user);
     }
 
