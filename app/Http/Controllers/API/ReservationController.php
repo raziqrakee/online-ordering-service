@@ -128,6 +128,16 @@ class ReservationController extends Controller
         $bookedSlots = Reservation::where('date', $date)->pluck('time_slot')->toArray();
         $availableSlots = array_diff($slots, $bookedSlots);
 
-        return response()->json($availableSlots);
+        // Remove past time slots for today
+        $currentDate = Carbon::now()->format('Y-m-d');
+        if ($date === $currentDate) {
+            $currentTime = Carbon::now()->format('H:i');
+            $availableSlots = array_filter($availableSlots, function ($slot) use ($currentTime) {
+                $start = explode('-', $slot)[0];
+                return $start >= $currentTime;
+            });
+        }
+
+        return response()->json(array_values($availableSlots));
     }
 }
