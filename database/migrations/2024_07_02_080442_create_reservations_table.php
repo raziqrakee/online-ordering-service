@@ -6,13 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateReservationsTable extends Migration
 {
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
     public function up()
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
             $table->string('customer');
+            $table->string('email');
             $table->date('date');
-            $table->time('time');
+            $table->string('time_slot');
             $table->integer('pax');
             $table->string('phone');
             $table->enum('status', ['Pending', 'Confirmed', 'Cancelled'])->default('Pending');
@@ -20,6 +26,11 @@ class CreateReservationsTable extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
     public function down()
     {
         Schema::dropIfExists('reservations');
