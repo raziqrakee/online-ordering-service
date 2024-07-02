@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Reservation;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Mail\ReservationStatusMail;
+use Illuminate\Support\Facades\Mail;
 
 class ReservationController extends Controller
 {
@@ -26,6 +28,7 @@ class ReservationController extends Controller
                 'time_slot' => 'required|string',
                 'pax' => 'required|integer|min:1|max:6',
                 'phone' => 'required|string|max:15',
+                'email' => 'required|email|max:255',
                 'status' => 'required|string|in:Pending,Confirmed,Cancelled'
             ]);
 
@@ -62,6 +65,7 @@ class ReservationController extends Controller
                 'time_slot' => 'string',
                 'pax' => 'integer|min:1|max:6',
                 'phone' => 'string|max:15',
+                'email' => 'email',
                 'status' => 'string|in:Pending,Confirmed,Cancelled'
             ]);
 
@@ -76,12 +80,20 @@ class ReservationController extends Controller
 
             $reservation->update($request->all());
 
+            // Send email notification for any update
+            $this->sendStatusEmail($reservation);
+
             return response()->json($reservation, 200);
 
         } catch (\Exception $e) {
             Log::error('Failed to update reservation: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to update reservation'], 500);
         }
+    }
+
+    protected function sendStatusEmail($reservation)
+    {
+        Mail::to($reservation->email)->send(new ReservationStatusMail($reservation));
     }
 
     public function destroy($id)
@@ -140,4 +152,24 @@ class ReservationController extends Controller
 
         return response()->json(array_values($availableSlots));
     }
+
+    public function updateReservationStatus(Request $request, $id)
+    {
+        try {
+            $reservation = Reservation::findOrFail($id);
+            $status = $request->input('status');
+            $reservation->status = $status;
+            $reservation->save();
+
+            // Send email notification
+            Mail::to($reservation->email)->send(new ReservationStatusMail($reservation));
+
+            return response()->json($reservation, 200);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update reservation status: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update reservation status'], 500);
+        }
+    }
 }
+
