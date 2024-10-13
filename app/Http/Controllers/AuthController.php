@@ -1,14 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\User;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-
 
 class AuthController extends Controller
 {
@@ -18,7 +17,7 @@ class AuthController extends Controller
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6',
-            "contact_number" => 'required|string',
+            'contact_number' => 'required|string|regex:/^[0-9]{10,11}$/',
             'role' => 'required|string',
         ]);
 
@@ -49,41 +48,48 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->firstOrFail();
         $token = $user->createToken('AuthToken')->plainTextToken;
 
-        return response()->json(['token' => $token, "role" => $user->role,  "id" => $user->id], 200);
+        return response()->json(['token' => $token, 'role' => $user->role, 'id' => $user->id], 200);
     }
-     public function resetPassword(Request $request)
-     {
-         $request->validate([
-             'email' => 'required|email',
-         ]);
 
-         $user = User::where('email', $request->email)->first();
+    public function logout(Request $request)
+    {
+        // Ensure that the authenticated user's tokens are deleted
+        $user = $request->user();
 
-         if (!$user) {
-             return response()->json(['message' => 'User not found'], 404);
-         }
+        if ($user) {
+            $user->tokens()->delete();
+            return response()->json(['message' => 'Logged out successfully'], 200);
+        }
 
-         // Generate a random temporary password
-         $tempPassword = Str::random(10);
+        return response()->json(['message' => 'Unable to logout'], 400);
+    }
 
-         // Update user's password with the temporary password
-         $user->password = Hash::make($tempPassword);
-         $user->save();
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
 
-         // Send the temporary password to the user's email
-         $this->sendTempPasswordByEmail($user->email, $tempPassword);
+        $user = User::where('email', $request->email)->first();
 
-         return response()->json(['message' => 'Temporary password sent to your email'], 200);
-     }
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
 
-     private function sendTempPasswordByEmail($email, $tempPassword)
-     {
-         // Send email logic here (use your preferred email sending method or service)
-         // Example using Laravel Mail:
-         Mail::raw("Your temporary password is: $tempPassword", function ($message) use ($email) {
+        $tempPassword = Str::random(10);
+        $user->password = Hash::make($tempPassword);
+        $user->save();
+
+        $this->sendTempPasswordByEmail($user->email, $tempPassword);
+
+        return response()->json(['message' => 'Temporary password sent to your email'], 200);
+    }
+
+    private function sendTempPasswordByEmail($email, $tempPassword)
+    {
+        Mail::raw("Your temporary password is: $tempPassword", function ($message) use ($email) {
             $message->from('your@example.com', 'Admin Danish Ice Cream Cafe');
             $message->to($email)->subject('Temporary Password');
         });
-
-     }
+    }
 }

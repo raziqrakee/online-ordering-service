@@ -163,88 +163,63 @@ class ProductController extends Controller
         }
     }
     // new api for update product with image - 20240530
-    public function product_update(Request $request, $id = null)
-    {
-        $data = $request->all();
-        // Validate the request data
-        $validator = Validator::make($data, [
-            'name' => 'required|string|max:191',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric',
-            'quantity' => 'required|integer',
-            'category' => 'required|string',
-        ]);
+// new api for update product with image - 20240530
+public function product_update(Request $request, $id)
+{
+    $data = $request->all();
+    // Validate the request data
+    $validator = Validator::make($data, [
+        'name' => 'required|string|max:191',
+        'description' => 'nullable|string',
+        'price' => 'required|numeric',
+        'quantity' => 'required|integer',
+        'category' => 'required|string',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 422,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $image->move(public_path('storage/images'), $imageName);
-            $imagePath = 'storage/images/' . $imageName;
-        }
-
-        try {
-            if ($id) {
-                // Edit operation
-                $product = Product::findOrFail($id);
-                $product->name = $request->name;
-                $product->description = $request->description;
-                $product->price = $request->price;
-                $product->quantity = $request->quantity;
-                $product->category = $request->category;
-                $product->image = $request->image;
-                if ($imagePath) {
-                    $product->image = $imagePath;
-                }
-                $product->save();
-
-                return response()->json([
-                    'status' => 200,
-                    'message' => 'Product Updated Successfully',
-                    'data' => $product
-                ], 200);
-            } else {
-                // Insert operation
-                $product = Product::create([
-                    'name' => $request->name,
-                    'description' => $request->description,
-                    'price' => $request->price,
-                    'quantity' => $request->quantity,
-                    'category' => $request->category,
-                    'image' => $imagePath,
-                ]);
-
-                if ($product) {
-                    return response()->json([
-                        'status' => 201,
-                        'message' => 'Product Added Successfully',
-                        'data' => $product
-                    ], 201);
-                } else {
-                    return response()->json([
-                        'status' => 500,
-                        'message' => 'Something Went Wrong!'
-                    ], 500);
-                }
-            }
-        } catch (\Exception $e) {
-            // Log the error
-            Log::error('Error in product_update: ' . $e->getMessage());
-
-            // Return a generic error response
-            return response()->json([
-                'status' => 500,
-                'message' => 'An error occurred while processing the request.'
-            ], 500);
-        }
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => 422,
+            'errors' => $validator->errors()
+        ], 422);
     }
+
+    $imagePath = null;
+    if ($request->hasFile('image')) {
+        $image = $request->file('image');
+        $imageName = time() . '.' . $image->getClientOriginalExtension();
+        $image->move(public_path('storage/images'), $imageName);
+        $imagePath = 'storage/images/' . $imageName;
+    }
+
+    try {
+        $product = Product::findOrFail($id);
+        $product->name = $request->name;
+        $product->description = $request->description;
+        $product->price = $request->price;
+        $product->quantity = $request->quantity;
+        $product->category = $request->category;
+        if ($imagePath) {
+            $product->image = $imagePath;
+        }
+        $product->save();
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Product Updated Successfully',
+            'data' => $product
+        ], 200);
+    } catch (\Exception $e) {
+        // Log the error
+        Log::error('Error in product_update: ' . $e->getMessage());
+
+        // Return a generic error response
+        return response()->json([
+            'status' => 500,
+            'message' => 'An error occurred while processing the request.'
+        ], 500);
+    }
+}
+
 
     public function p_show($id)
     {
