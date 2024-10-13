@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\OrderItem;
-use App\Models\Product; // Import the Product model
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
@@ -14,7 +15,6 @@ class OrderController extends Controller
     public function placeOrder(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
             'items' => 'required|array',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -29,8 +29,10 @@ class OrderController extends Controller
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
+        $user = Auth::user();
+
         $order = new Order();
-        $order->user_id = $request->user_id;
+        $order->user_id = $user->id;
         $order->total_amount = $request->total_amount;
         $order->order_status = 'pending';
         $order->customer_order_status = 'received';
@@ -117,4 +119,15 @@ class OrderController extends Controller
         return response()->json(['latestOrderId' => $latestOrderId], 200);
     }
 
+    public function getUserLatestOrder()
+    {
+        $user = Auth::user();
+        $latestOrder = Order::where('user_id', $user->id)->orderBy('created_at', 'desc')->first();
+
+        if ($latestOrder) {
+            return response()->json(['order_id' => $latestOrder->id], 200);
+        } else {
+            return response()->json(['message' => 'No orders found'], 404);
+        }
+    }
 }
